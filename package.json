@@ -1,0 +1,24 @@
+{
+  "name": "consensus",
+  "version": "0.1.0",
+  "description": "A prototype application that aggregates responses from multiple LLMs to form a consensus",
+  "main": "consensus.js",
+  "scripts": {
+    "start": "node consensus.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ai",
+    "llm",
+    "consensus",
+    "gemini",
+    "prototype"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "express": "^5.1.0"
+  }
+}
