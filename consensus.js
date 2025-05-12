@@ -13,8 +13,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 // Serve React frontend static files in production
-// The 'frontend/dist' folder is created when you run 'npm run build' in the 'frontend' directory
-// app.use(express.static(path.join(__dirname, 'frontend', 'dist'))); // Temporarily commented out
+app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
 
 /**
  * Query the Gemini API with a user prompt
@@ -119,17 +118,12 @@ app.post('/api/prompt', async (req, res) => {
 
 // For all other GET requests, send back the React frontend's index.html file.
 // This is important for SPAs and client-side routing.
-// app.get('*', (req, res) => { // Temporarily commented out
-//   res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
-// });
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-  console.log('API endpoint available at /api/prompt');
-  console.log('Supported providers: google (OpenAI and DeepSeek coming soon)');
-  console.log('Supported Gemini 1.5 models: gemini-1.5-pro-002, gemini-1.5-flash-002, gemini-1.5-flash-8b-001');
-  console.log('Supported Gemini 2.0 models: gemini-2.0-flash, gemini-2.0-flash-001, gemini-2.0-flash-lite');
-  console.log('Supported Gemini 2.5 models: gemini-2.5-pro-preview-05-06, gemini-2.5-flash-preview-04-17');
-  // console.log('React frontend should be accessible if built and served, or via Vite dev server.');
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
+
+// Remove this line as Vercel handles it differently
+// app.listen(port, () => {...});
+
+// Add this line at the end to export the Express app
+module.exports = app;
