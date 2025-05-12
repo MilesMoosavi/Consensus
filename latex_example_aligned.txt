@@ -1,0 +1,4 @@
+\begin{aligned}
+x &= y + z \\
+a &= b - c + d
+\end{aligned}

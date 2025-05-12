@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown and LaTeX Playground</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        #output {
+            padding: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Markdown and LaTeX Playground</h1>
+    <textarea id="input" rows="10" cols="50" placeholder="Enter Markdown or LaTeX here..."></textarea>
+    <button onclick="renderContent()">Render</button>
+    <div id="output"></div>
+
+    <div>
+        <button onclick="loadExample(0)">Load Markdown Example</button>
+        <button onclick="loadExample(1)">Load LaTeX Example</button>
+        <button onclick="loadExample(2)">Load Combined Example</button>
+        <button onclick="loadExample(3)">Load Aligned LaTeX Example</button>
+    </div>
+
+    <script>
+        const exampleInputs = [
+            `# Markdown Example
+
+This is a **bold** text and this is *italic*.
+
+- Item 1
+- Item 2
+- Item 3
+
+\`Inline code\` and a code block:
+
+\`\`\`
+console.log('Hello, world!');
+\`\`\``,
+            `# LaTeX Example
+
+Here is an inline math formula: $E=mc^2$.
+
+And here is a block math formula:
+
+$$
+\\int_{-\infty}^{\infty} e^{-x^2} dx = \\sqrt{\pi}
+$$`,
+            `# Combined Example
+
+This is a **Markdown** paragraph with an inline math formula: $a^2 + b^2 = c^2$.
+
+Here is a list with math:
+
+- $x = 1$
+- $y = 2$
+- $z = 3$
+
+And a block formula:
+
+$$
+\\frac{d}{dx}e^x = e^x
+$$`,
+            `# LaTeX Aligned Example
+
+An example of an aligned environment:
+$$
+\\begin{aligned}
+x &= y + z \\\\
+a &= b - c + d
+\\end{aligned}
+$$
+
+Another common structure, a matrix:
+$$
+A = \\begin{pmatrix}
+a & b \\\\
+c & d
+\\end{pmatrix}
+$$`
+        ];
+
+        function loadExample(index) {
+            document.getElementById('input').value = exampleInputs[index];
+        }
+
+        function renderContent() {
+            const input = document.getElementById('input').value;
+            const output = document.getElementById('output');
+
+            let processedInput = input;
+
+            // Step 1: Render LaTeX from the raw input
+            // Handle block formulas first
+            processedInput = processedInput.replace(/\$\$(.*?)\$\$/gs, (match, p1) => {
+                try {
+                    return `<div style='text-align: center;'>${katex.renderToString(p1.trim(), { throwOnError: false, displayMode: true, trust: true })}</div>`;
+                } catch (e) {
+                    return `<div style='color: red;'>Error rendering block formula: ${match} (${e.message})</div>`;
+                }
+            });
+
+            // Handle inline formulas
+            processedInput = processedInput.replace(/\$(.*?)\$/g, (match, p1) => {
+                // Avoid accidentally processing parts of already processed block formulas or other non-LaTeX $ signs.
+                // This regex is simple; more complex scenarios might need lookaheads/lookbehinds or a stateful parser.
+                if (match.startsWith('$$') || match.endsWith('$$')) { // Basic check to avoid double processing (though gs in block should handle most)
+                    return match;
+                }
+                try {
+                    return katex.renderToString(p1.trim(), { throwOnError: false, trust: true });
+                } catch (e) {
+                    return `<span style='color: red;'>Error rendering inline formula: ${match} (${e.message})</span>`;
+                }
+            });
+
+            // Step 2: Render Markdown from the processed input (which now has HTML for LaTeX)
+            const finalHtml = marked.parse(processedInput);
+
+            output.innerHTML = finalHtml;
+        }
+    </script>
+</body>
+</html>

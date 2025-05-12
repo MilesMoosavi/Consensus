@@ -1,10 +1,49 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import './App.css';
+import { marked } from 'marked';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+
+// Helper function to render content with Markdown and LaTeX
+const renderFormattedContent = (content) => {
+  if (typeof content !== 'string') {
+    return ''; // Or some fallback for non-string content
+  }
+  let processedInput = content;
+
+  // Step 1: Render LaTeX from the raw input
+  // Handle block formulas first
+  processedInput = processedInput.replace(/\$\$(.*?)\$\$/gs, (match, p1) => {
+    try {
+      return `<div style='text-align: center;'>${katex.renderToString(p1.trim(), { throwOnError: false, displayMode: true, trust: true })}</div>`;
+    } catch (e) {
+      return `<div style='color: red;'>Error rendering block formula: ${match} (${e.message})</div>`;
+    }
+  });
+
+  // Handle inline formulas
+  processedInput = processedInput.replace(/\$(.*?)\$/g, (match, p1) => {
+    if (match.startsWith('$$') || match.endsWith('$$')) {
+      return match;
+    }
+    try {
+      return katex.renderToString(p1.trim(), { throwOnError: false, trust: true });
+    } catch (e) {
+      return `<span style='color: red;'>Error rendering inline formula: ${match} (${e.message})</span>`;
+    }
+  });
+
+  // Step 2: Render Markdown from the processed input (which now has HTML for LaTeX)
+  // Make sure to sanitize if the content can come from untrusted sources.
+  // For this internal tool, we might skip heavy sanitization if performance is key and content is trusted.
+  const finalHtml = marked.parse(processedInput);
+  return finalHtml;
+};
 
 function App() {
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // General loading for initial prompt submission
   const [activeModels, setActiveModels] = useState([]);
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [modelSettings, setModelSettings] = useState({});
@@ -212,50 +251,55 @@ function App() {
       return;
     }
 
+    const originalUserPrompt = prompt; // Store original prompt for consensus
+    const userPromptWithCustomInstruction = `${originalUserPrompt}
+
+Please box your final answer in LaTeX if possible.`;
+
     // Add user message to the chat
     const userMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: prompt,
+      content: originalUserPrompt, // Show original prompt in UI
       timestamp: new Date().toISOString()
     };
     
-    setMessages([...messages, userMessage]);
-    setIsLoading(true);
+    // Create response placeholders for each active model
+    const modelResponsePlaceholders = {};
+    activeModels.forEach(modelId => {
+      const provider = providers.find(p => 
+        p.models.some(m => m.id === modelId)
+      );
+      const model = provider?.models.find(m => m.id === modelId);
+      
+      if (model) {
+        modelResponsePlaceholders[modelId] = {
+          modelId,
+          modelName: model.name,
+          providerName: provider.name,
+          providerIcon: provider.icon,
+          content: 'Generating response...',
+          isLoading: true,
+          error: null
+        };
+      }
+    });
+    
+    // Add the assistant message structure (including placeholders and initial consensus state)
+    const assistantMessageId = `response-${Date.now()}`;
+    const assistantMessage = {
+      id: assistantMessageId,
+      role: 'assistant',
+      modelResponses: modelResponsePlaceholders,
+      consensus: null, // Initialize consensus part
+      timestamp: new Date().toISOString()
+    };
+    
+    setMessages([...messages, userMessage, assistantMessage]);
+    setIsLoading(true); // For initial batch of requests
     setPrompt(''); // Clear the input
 
     try {
-      // Create response placeholders for each active model
-      const modelResponses = {};
-      activeModels.forEach(modelId => {
-        const provider = providers.find(p => 
-          p.models.some(m => m.id === modelId)
-        );
-        const model = provider?.models.find(m => m.id === modelId);
-        
-        if (model) {
-          modelResponses[modelId] = {
-            modelId,
-            modelName: model.name,
-            providerName: provider.name,
-            providerIcon: provider.icon,
-            content: 'Generating response...',
-            isLoading: true,
-            error: null
-          };
-        }
-      });
-      
-      // Add the response placeholders to the chat
-      const responseMessage = {
-        id: `response-${Date.now()}`,
-        role: 'assistant',
-        modelResponses,
-        timestamp: new Date().toISOString()
-      };
-      
-      setMessages(prevMessages => [...prevMessages, responseMessage]);
-
       // Make requests for each active model
       const requests = activeModels.map(async (modelId) => {
         try {
@@ -269,7 +313,7 @@ function App() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ 
-              prompt,
+              prompt: userPromptWithCustomInstruction, // Use prompt with custom instruction
               model: modelId,
               provider: providerId,
               settings: modelSettings[modelId] || {}
@@ -284,6 +328,7 @@ function App() {
           const data = await res.json();
           return { 
             modelId, 
+            modelName: modelResponsePlaceholders[modelId]?.name || modelId, // Keep modelName for consensus prompt
             content: data.response,
             isLoading: false,
             error: null 
@@ -292,6 +337,7 @@ function App() {
           console.error(`Error fetching response from ${modelId}:`, error);
           return { 
             modelId,
+            modelName: modelResponsePlaceholders[modelId]?.name || modelId,
             content: null,
             isLoading: false,
             error: error.message
@@ -299,36 +345,138 @@ function App() {
         }
       });
 
-      // Wait for all requests to complete
+      // Wait for all initial requests to complete
       const results = await Promise.all(requests);
       
       // Update the response message with the actual responses
-      setMessages(prevMessages => {
-        const updatedMessages = [...prevMessages];
-        const responseMessageIndex = updatedMessages.length - 1;
-        
-        if (updatedMessages[responseMessageIndex].role === 'assistant') {
-          const updatedModelResponses = { ...updatedMessages[responseMessageIndex].modelResponses };
-          
-          results.forEach(result => {
-            if (updatedModelResponses[result.modelId]) {
-              updatedModelResponses[result.modelId] = {
-                ...updatedModelResponses[result.modelId],
-                content: result.error ? `Error: ${result.error}` : result.content,
-                isLoading: false,
-                error: result.error
+      setMessages(prevMessages => 
+        prevMessages.map(msg => {
+          if (msg.id === assistantMessageId) {
+            const updatedModelResponses = { ...msg.modelResponses };
+            results.forEach(result => {
+              if (updatedModelResponses[result.modelId]) {
+                updatedModelResponses[result.modelId] = {
+                  ...updatedModelResponses[result.modelId],
+                  content: result.error ? `Error: ${result.error}` : result.content,
+                  isLoading: false,
+                  error: result.error
+                };
+              }
+            });
+            return { ...msg, modelResponses: updatedModelResponses };
+          }
+          return msg;
+        })
+      );
+
+      // --- Consensus Generation ---
+      const successfulResponses = results.filter(r => !r.error && r.content);
+      if (successfulResponses.length >= 1) { // Changed to >=1 for testing, ideally >=2
+        // Update UI to show consensus is loading
+        setMessages(prevMessages =>
+          prevMessages.map(msg => {
+            if (msg.id === assistantMessageId) {
+              return {
+                ...msg,
+                consensus: {
+                  isLoading: true,
+                  content: 'Generating consensus...',
+                  error: null,
+                },
               };
             }
+            return msg;
+          })
+        );
+
+        let consensusPromptText = `The user's original prompt was: "${originalUserPrompt}"
+
+Based on the following responses from different AI models, please synthesize a single, comprehensive consensus answer. Analyze the responses for agreement and disagreement, and provide a final answer that reflects the most likely correct or comprehensive information. Please box your final consensus answer in LaTeX if possible.
+
+`;
+        successfulResponses.forEach(response => {
+          consensusPromptText += `Response from ${response.modelName}:
+${response.content}
+
+`;
+        });
+
+        const consensusModelId = 'gemini-2.0-flash';
+        const consensusProvider = providers.find(p => p.models.some(m => m.id === consensusModelId));
+        const consensusProviderId = consensusProvider ? consensusProvider.id : 'google';
+        const consensusModelSettings = modelSettings[consensusModelId] || { temperature: 0.5, maxTokens: 1000 }; // Specific settings for consensus
+
+        try {
+          const consensusRes = await fetch('/api/prompt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: consensusPromptText,
+              model: consensusModelId,
+              provider: consensusProviderId,
+              settings: consensusModelSettings,
+            }),
           });
+
+          if (!consensusRes.ok) {
+            const errorData = await consensusRes.json();
+            throw new Error(errorData.message || `HTTP error! Status: ${consensusRes.status}`);
+          }
+          const consensusData = await consensusRes.json();
           
-          updatedMessages[responseMessageIndex] = {
-            ...updatedMessages[responseMessageIndex],
-            modelResponses: updatedModelResponses
-          };
+          setMessages(prevMessages =>
+            prevMessages.map(msg => {
+              if (msg.id === assistantMessageId) {
+                return {
+                  ...msg,
+                  consensus: {
+                    isLoading: false,
+                    content: consensusData.response,
+                    error: null,
+                  },
+                };
+              }
+              return msg;
+            })
+          );
+
+        } catch (consensusError) {
+          console.error('Error generating consensus:', consensusError);
+          setMessages(prevMessages =>
+            prevMessages.map(msg => {
+              if (msg.id === assistantMessageId) {
+                return {
+                  ...msg,
+                  consensus: {
+                    isLoading: false,
+                    content: null,
+                    error: consensusError.message,
+                  },
+                };
+              }
+              return msg;
+            })
+          );
         }
-        
-        return updatedMessages;
-      });
+      } else {
+         // If not enough successful responses for consensus, ensure consensus part is cleared or indicates no consensus
+         setMessages(prevMessages =>
+          prevMessages.map(msg => {
+            if (msg.id === assistantMessageId && successfulResponses.length < 2) { // Strictly less than 2 for "no consensus"
+              return {
+                ...msg,
+                consensus: {
+                  isLoading: false,
+                  content: successfulResponses.length === 1 ? 'Not enough responses to generate a consensus (only 1 successful response).' : 'No successful responses to generate a consensus.',
+                  error: null,
+                },
+              };
+            }
+            return msg;
+          })
+        );
+      }
+
     } catch (error) {
       console.error('Error handling requests:', error);
       // Add error message to chat
@@ -463,7 +611,8 @@ function App() {
                 <>
                   <div className="user-avatar">👤</div>
                   <div className="message-content">
-                    {message.content}
+                    {/* Render user message content */}
+                    <div dangerouslySetInnerHTML={{ __html: renderFormattedContent(message.content) }} />
                   </div>
                 </>
               ) : message.role === 'system' ? (
@@ -499,30 +648,21 @@ function App() {
                                 e.stopPropagation();
                                 toggleModelSetting(modelId, 'useInternet');
                               }}
-                              title={`Internet ${modelSettings[modelId]?.useInternet ? 'enabled' : 'disabled'}`}
+                              title="Toggle Internet Access"
                             >
                               🌐
                             </button>
-                            <span className="collapse-indicator">
-                              {settings.visible ? '▼' : '▶'}
-                            </span>
+                            {/* Add more controls here if needed */}
                           </div>
                         </div>
-                        
                         {settings.visible && (
                           <div className="model-response-content">
                             {response.isLoading ? (
-                              <div className="typing-indicator">
-                                <span></span><span></span><span></span>
-                              </div>
+                              <div className="skeleton-loader"></div>
                             ) : response.error ? (
-                              <div className="response-error">
-                                {response.content}
-                              </div>
+                              <div className="error-message">{response.error}</div>
                             ) : (
-                              <div className="response-text">
-                                {response.content}
-                              </div>
+                              <div dangerouslySetInnerHTML={{ __html: renderFormattedContent(response.content) }} />
                             )}
                           </div>
                         )}
@@ -530,14 +670,25 @@ function App() {
                     );
                   })}
                   
-                  {Object.keys(message.modelResponses).length > 1 && (
+                  {/* Consensus Response Section */}
+                  {message.consensus && (
                     <div className="consensus-response">
                       <div className="consensus-header">
                         <span className="consensus-icon">🤝</span>
-                        <span>Consensus</span>
+                        <span>Consensus (via Gemini 2.0 Flash)</span>
+                        {message.consensus.isLoading && <span className="loading-indicator">⏳</span>}
+                        {message.consensus.error && <span className="error-indicator">⚠️</span>}
                       </div>
                       <div className="consensus-content">
-                        <p>Consensus generation is coming soon. This will analyze and combine responses from all models.</p>
+                        {message.consensus.isLoading ? (
+                          <div className="skeleton-loader"></div> // Or simply message.consensus.content which is "Generating..."
+                        ) : message.consensus.error ? (
+                          <div className="error-message">{message.consensus.error}</div>
+                        ) : message.consensus.content ? (
+                          <div dangerouslySetInnerHTML={{ __html: renderFormattedContent(message.consensus.content) }} />
+                        ) : (
+                          <p>No consensus generated.</p> // Fallback if content is null/empty but no error
+                        )}
                       </div>
                     </div>
                   )}
