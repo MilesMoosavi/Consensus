@@ -3,7 +3,7 @@
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/consensus.js" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/api/:path*", "destination": "/consensus.js" },
+    { "source": "/:path*", "destination": "/" }
   ]
 }

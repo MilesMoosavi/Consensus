@@ -59,7 +59,6 @@ async function queryGemini(prompt, model = 'gemini-1.5-pro-002') {
     if (error.response) {
       console.error("API Error data:", error.response.data);
       console.error("API Error status:", error.response.status);
-      // console.error("API Error headers:", error.response.headers); // Can be verbose
       const errorMessage = error.response.data.error ? error.response.data.error.message : JSON.stringify(error.response.data);
       throw new Error(`API Error: ${error.response.status} - ${errorMessage}`);
     } else if (error.request) {
@@ -73,7 +72,7 @@ async function queryGemini(prompt, model = 'gemini-1.5-pro-002') {
 }
 
 /**
- * Function to handle different providers (placeholder for future implementation)
+ * Function to handle different providers
  * @param {string} prompt - The user's input prompt
  * @param {string} provider - The provider (google, openai, deepseek)
  * @param {string} model - The specific model to use
@@ -84,10 +83,8 @@ async function queryLLM(prompt, provider = 'google', model = 'gemini-1.5-pro-002
     case 'google':
       return await queryGemini(prompt, model);
     case 'openai':
-      // Placeholder for future OpenAI implementation
       return "OpenAI integration is coming soon!";
     case 'deepseek':
-      // Placeholder for future DeepSeek implementation
       return "DeepSeek integration is coming soon!";
     default:
       throw new Error(`Provider '${provider}' is not supported yet.`);
@@ -116,14 +113,12 @@ app.post('/api/prompt', async (req, res) => {
     }
 });
 
-// For all other GET requests, send back the React frontend's index.html file.
-// This is important for SPAs and client-side routing.
+// For all other GET requests, serve the React frontend
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
 
-// Remove this line as Vercel handles it differently
-// app.listen(port, () => {...});
-
-// Add this line at the end to export the Express app
-module.exports = app;
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
