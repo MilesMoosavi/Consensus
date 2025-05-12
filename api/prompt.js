@@ -1,22 +1,14 @@
-require("dotenv").config();
-const axios = require("axios");
-const express = require("express");
-const serverless = require("serverless-http");
+import dotenv from "dotenv";
+import axios from "axios";
+
+dotenv.config();
 
 // Base Gemini API endpoint
 const GEMINI_API_BASE =
   "https://generativelanguage.googleapis.com/v1beta/models";
 
-const app = express();
-
-// Middleware to parse JSON bodies
-app.use(express.json());
-
 /**
  * Query the Gemini API with a user prompt
- * @param {string} prompt - The user's input prompt
- * @param {string} model - The model to use (e.g. 'gemini-1.5-pro-002')
- * @returns {Promise<string>} - The model's response
  */
 async function queryGemini(prompt, model = "gemini-1.5-pro-002") {
   try {
@@ -48,36 +40,24 @@ async function queryGemini(prompt, model = "gemini-1.5-pro-002") {
     ) {
       return response.data.candidates[0].content.parts[0].text;
     } else {
-      console.error(
-        "Unexpected response structure from Gemini API:",
-        response.data
-      );
       throw new Error("Unexpected response structure from Gemini API");
     }
   } catch (error) {
     if (error.response) {
-      console.error("API Error data:", error.response.data);
-      console.error("API Error status:", error.response.status);
       const errorMessage = error.response.data.error
         ? error.response.data.error.message
         : JSON.stringify(error.response.data);
       throw new Error(`API Error: ${error.response.status} - ${errorMessage}`);
     } else if (error.request) {
-      console.error("Network Error:", error.request);
       throw new Error("Network error - no response received");
     } else {
-      console.error("Error message:", error.message);
       throw error;
     }
   }
 }
 
 /**
- * Function to handle different providers
- * @param {string} prompt - The user's input prompt
- * @param {string} provider - The provider (google, openai, deepseek)
- * @param {string} model - The specific model to use
- * @returns {Promise<string>} - The model's response
+ * Handle different LLM providers
  */
 async function queryLLM(
   prompt,
@@ -87,17 +67,37 @@ async function queryLLM(
   switch (provider) {
     case "google":
       return await queryGemini(prompt, model);
-    case "openai":
-      return "OpenAI integration is coming soon!";
-    case "deepseek":
-      return "DeepSeek integration is coming soon!";
     default:
       throw new Error(`Provider '${provider}' is not supported yet.`);
   }
 }
 
-// API endpoint to handle prompts
-app.post("/api/prompt", async (req, res) => {
+// Main serverless function handler for Vercel
+export default async function handler(req, res) {
+  // Enable CORS
+  res.setHeader("Access-Control-Allow-Credentials", true);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,OPTIONS,PATCH,DELETE,POST,PUT"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+  );
+
+  // Handle OPTIONS request (pre-flight)
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  // Only allow POST for actual requests
+  if (req.method !== "POST") {
+    return res
+      .status(405)
+      .json({ message: "Method not allowed. Please use POST." });
+  }
+
   const {
     prompt,
     provider = "google",
@@ -117,14 +117,11 @@ app.post("/api/prompt", async (req, res) => {
     }
 
     const response = await queryLLM(prompt, provider, model);
-    res.json({ response, provider, model });
+    return res.status(200).json({ response, provider, model });
   } catch (error) {
-    console.error("Error in /api/prompt:", error.message);
-    res
+    console.error("Error in API handler:", error.message);
+    return res
       .status(500)
       .json({ message: error.message || "Failed to get response from LLM" });
   }
-});
-
-// For Vercel, we need to export the handler
-module.exports = app;
+}

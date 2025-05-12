@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import './App.css';
-import { marked } from 'marked';
-import katex from 'katex';
-import 'katex/dist/katex.min.css';
+import { useState, useEffect, useRef, useMemo } from "react";
+import "./App.css";
+import { marked } from "marked";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 
 // Helper function to render content with Markdown and LaTeX
 const renderFormattedContent = (content) => {
-  if (typeof content !== 'string') {
-    return ''; // Or some fallback for non-string content
+  if (typeof content !== "string") {
+    return ""; // Or some fallback for non-string content
   }
   let processedInput = content;
 
@@ -15,7 +15,10 @@ const renderFormattedContent = (content) => {
   // Handle block formulas first
   processedInput = processedInput.replace(/\$\$(.*?)\$\$/gs, (match, p1) => {
     try {
-      return `<div style='text-align: center;'>${katex.renderToString(p1.trim(), { throwOnError: false, displayMode: true, trust: true })}</div>`;
+      return `<div style='text-align: center;'>${katex.renderToString(
+        p1.trim(),
+        { throwOnError: false, displayMode: true, trust: true }
+      )}</div>`;
     } catch (e) {
       return `<div style='color: red;'>Error rendering block formula: ${match} (${e.message})</div>`;
     }
@@ -23,11 +26,14 @@ const renderFormattedContent = (content) => {
 
   // Handle inline formulas
   processedInput = processedInput.replace(/\$(.*?)\$/g, (match, p1) => {
-    if (match.startsWith('$$') || match.endsWith('$$')) {
+    if (match.startsWith("$$") || match.endsWith("$$")) {
       return match;
     }
     try {
-      return katex.renderToString(p1.trim(), { throwOnError: false, trust: true });
+      return katex.renderToString(p1.trim(), {
+        throwOnError: false,
+        trust: true,
+      });
     } catch (e) {
       return `<span style='color: red;'>Error rendering inline formula: ${match} (${e.message})</span>`;
     }
@@ -41,7 +47,7 @@ const renderFormattedContent = (content) => {
 };
 
 function App() {
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false); // General loading for initial prompt submission
   const [activeModels, setActiveModels] = useState([]);
@@ -49,170 +55,200 @@ function App() {
   const [modelSettings, setModelSettings] = useState({});
   const [darkMode, setDarkMode] = useState(true); // Default to dark mode
   const messagesEndRef = useRef(null);
-  
+
   const modelSelectorRef = useRef(null);
-  
+
   // Available providers and their models
-  const providers = useMemo(() => [
-    { 
-      id: 'google', 
-      name: 'Google', 
-      icon: '🔍',
-      available: true,
-      models: [
-        // Gemini 1.5 Models
-        { id: 'gemini-1.5-pro-002', name: 'Gemini 1.5 Pro', available: true },
-        { id: 'gemini-1.5-flash-002', name: 'Gemini 1.5 Flash', available: true },
-        { id: 'gemini-1.5-flash-8b-001', name: 'Gemini 1.5 Flash 8B', available: true },
-        
-        // Gemini 2.0 Models
-        { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', available: true },
-        { id: 'gemini-2.0-flash-001', name: 'Gemini 2.0 Flash 001', available: true },
-        { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', available: true },
-        
-        // Gemini 2.5 Models
-        { id: 'gemini-2.5-pro-preview-05-06', name: 'Gemini 2.5 Pro Preview', available: true },
-        { id: 'gemini-2.5-flash-preview-04-17', name: 'Gemini 2.5 Flash Preview', available: true }
-      ]
-    },
-    { 
-      id: 'openai', 
-      name: 'OpenAI',
-      icon: '🤖',
-      available: false,
-      models: [
-        { id: 'gpt-4', name: 'GPT-4', available: false },
-        { id: 'gpt-4o', name: 'GPT-4o', available: false }
-      ]
-    },
-    { 
-      id: 'deepseek', 
-      name: 'DeepSeek',
-      icon: '🔍',
-      available: false,
-      models: [
-        { id: 'deepseek-coder', name: 'DeepSeek Coder', available: false },
-        { id: 'deepseek-chat', name: 'DeepSeek Chat', available: false }
-      ]
-    }
-  ], []);
+  const providers = useMemo(
+    () => [
+      {
+        id: "google",
+        name: "Google",
+        icon: "🔍",
+        available: true,
+        models: [
+          // Gemini 1.5 Models
+          { id: "gemini-1.5-pro-002", name: "Gemini 1.5 Pro", available: true },
+          {
+            id: "gemini-1.5-flash-002",
+            name: "Gemini 1.5 Flash",
+            available: true,
+          },
+          {
+            id: "gemini-1.5-flash-8b-001",
+            name: "Gemini 1.5 Flash 8B",
+            available: true,
+          },
+
+          // Gemini 2.0 Models
+          { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", available: true },
+          {
+            id: "gemini-2.0-flash-001",
+            name: "Gemini 2.0 Flash 001",
+            available: true,
+          },
+          {
+            id: "gemini-2.0-flash-lite",
+            name: "Gemini 2.0 Flash Lite",
+            available: true,
+          },
+
+          // Gemini 2.5 Models
+          {
+            id: "gemini-2.5-pro-preview-05-06",
+            name: "Gemini 2.5 Pro Preview",
+            available: true,
+          },
+          {
+            id: "gemini-2.5-flash-preview-04-17",
+            name: "Gemini 2.5 Flash Preview",
+            available: true,
+          },
+        ],
+      },
+      {
+        id: "openai",
+        name: "OpenAI",
+        icon: "🤖",
+        available: false,
+        models: [
+          { id: "gpt-4", name: "GPT-4", available: false },
+          { id: "gpt-4o", name: "GPT-4o", available: false },
+        ],
+      },
+      {
+        id: "deepseek",
+        name: "DeepSeek",
+        icon: "🔍",
+        available: false,
+        models: [
+          { id: "deepseek-coder", name: "DeepSeek Coder", available: false },
+          { id: "deepseek-chat", name: "DeepSeek Chat", available: false },
+        ],
+      },
+    ],
+    []
+  );
 
   // Initialize model settings on component mount
   useEffect(() => {
     // Load saved settings from localStorage if available
-    const savedActiveModels = localStorage.getItem('activeModels');
-    const savedModelSettings = localStorage.getItem('modelSettings');
-    
+    const savedActiveModels = localStorage.getItem("activeModels");
+    const savedModelSettings = localStorage.getItem("modelSettings");
+
     if (savedActiveModels) {
       try {
         const parsedActiveModels = JSON.parse(savedActiveModels);
         setActiveModels(parsedActiveModels);
       } catch (e) {
-        console.error('Failed to parse saved active models', e);
+        console.error("Failed to parse saved active models", e);
         setActiveModels([]);
       }
     }
-    
+
     if (savedModelSettings) {
       try {
         const parsedModelSettings = JSON.parse(savedModelSettings);
         setModelSettings(parsedModelSettings);
       } catch (e) {
-        console.error('Failed to parse saved model settings', e);
+        console.error("Failed to parse saved model settings", e);
         setModelSettings({});
       }
     } else {
       // Initialize default settings for each model
       const initialSettings = {};
-      providers.forEach(provider => {
-        provider.models.forEach(model => {
+      providers.forEach((provider) => {
+        provider.models.forEach((model) => {
           initialSettings[model.id] = {
             useInternet: false,
             temperature: 0.7,
             maxTokens: 800,
-            visible: true
+            visible: true,
           };
         });
       });
       setModelSettings(initialSettings);
     }
   }, [providers]);
-  
+
   // Save settings whenever they change
   useEffect(() => {
     if (activeModels.length > 0) {
-      localStorage.setItem('activeModels', JSON.stringify(activeModels));
+      localStorage.setItem("activeModels", JSON.stringify(activeModels));
     }
     if (Object.keys(modelSettings).length > 0) {
-      localStorage.setItem('modelSettings', JSON.stringify(modelSettings));
+      localStorage.setItem("modelSettings", JSON.stringify(modelSettings));
     }
   }, [activeModels, modelSettings]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-  
+
   // Handle clicks outside of dropdowns to close them
   useEffect(() => {
     function handleClickOutside(event) {
-      if (modelSelectorRef.current && !modelSelectorRef.current.contains(event.target)) {
+      if (
+        modelSelectorRef.current &&
+        !modelSelectorRef.current.contains(event.target)
+      ) {
         setShowModelSelector(false);
       }
     }
-    
-    document.addEventListener('mousedown', handleClickOutside);
+
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  
+
   // Initialize theme and set class on document
   useEffect(() => {
     // Check if user has a saved preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light") {
       setDarkMode(false);
-      document.documentElement.classList.remove('dark-mode');
+      document.documentElement.classList.remove("dark-mode");
     } else {
       // Default to dark mode
       setDarkMode(true);
-      document.documentElement.classList.add('dark-mode');
+      document.documentElement.classList.add("dark-mode");
     }
   }, []);
-  
+
   // Toggle between light and dark mode
   const toggleTheme = () => {
-    setDarkMode(prevMode => {
+    setDarkMode((prevMode) => {
       const newMode = !prevMode;
       if (newMode) {
-        document.documentElement.classList.add('dark-mode');
-        localStorage.setItem('theme', 'dark');
+        document.documentElement.classList.add("dark-mode");
+        localStorage.setItem("theme", "dark");
       } else {
-        document.documentElement.classList.remove('dark-mode');
-        localStorage.setItem('theme', 'light');
+        document.documentElement.classList.remove("dark-mode");
+        localStorage.setItem("theme", "light");
       }
       return newMode;
     });
   };
 
   const toggleModelActivation = (modelId) => {
-    setActiveModels(prevModels => {
+    setActiveModels((prevModels) => {
       if (prevModels.includes(modelId)) {
-        return prevModels.filter(id => id !== modelId);
+        return prevModels.filter((id) => id !== modelId);
       } else {
         // Update settings for this model if it doesn't exist
         if (!modelSettings[modelId]) {
-          setModelSettings(prevSettings => ({
+          setModelSettings((prevSettings) => ({
             ...prevSettings,
             [modelId]: {
               useInternet: false,
               temperature: 0.7,
               maxTokens: 800,
-              visible: true
-            }
+              visible: true,
+            },
           }));
         }
         return [...prevModels, modelId];
@@ -221,22 +257,22 @@ function App() {
   };
 
   const toggleModelVisibility = (modelId) => {
-    setModelSettings(prevSettings => ({
+    setModelSettings((prevSettings) => ({
       ...prevSettings,
       [modelId]: {
         ...prevSettings[modelId],
-        visible: !prevSettings[modelId]?.visible
-      }
+        visible: !prevSettings[modelId]?.visible,
+      },
     }));
   };
 
   const toggleModelSetting = (modelId, setting) => {
-    setModelSettings(prevSettings => ({
+    setModelSettings((prevSettings) => ({
       ...prevSettings,
       [modelId]: {
         ...prevSettings[modelId],
-        [setting]: !prevSettings[modelId]?.[setting]
-      }
+        [setting]: !prevSettings[modelId]?.[setting],
+      },
     }));
   };
 
@@ -246,7 +282,7 @@ function App() {
     }
 
     if (activeModels.length === 0) {
-      alert('Please select at least one model.');
+      alert("Please select at least one model.");
       setShowModelSelector(true);
       return;
     }
@@ -259,107 +295,132 @@ Please box your final answer in LaTeX if possible.`;
     // Add user message to the chat
     const userMessage = {
       id: `user-${Date.now()}`,
-      role: 'user',
+      role: "user",
       content: originalUserPrompt, // Show original prompt in UI
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    
+
     // Create response placeholders for each active model
     const modelResponsePlaceholders = {};
-    activeModels.forEach(modelId => {
-      const provider = providers.find(p => 
-        p.models.some(m => m.id === modelId)
+    activeModels.forEach((modelId) => {
+      const provider = providers.find((p) =>
+        p.models.some((m) => m.id === modelId)
       );
-      const model = provider?.models.find(m => m.id === modelId);
-      
+      const model = provider?.models.find((m) => m.id === modelId);
+
       if (model) {
         modelResponsePlaceholders[modelId] = {
           modelId,
           modelName: model.name,
           providerName: provider.name,
           providerIcon: provider.icon,
-          content: 'Generating response...',
+          content: "Generating response...",
           isLoading: true,
-          error: null
+          error: null,
         };
       }
     });
-    
+
     // Add the assistant message structure (including placeholders and initial consensus state)
     const assistantMessageId = `response-${Date.now()}`;
     const assistantMessage = {
       id: assistantMessageId,
-      role: 'assistant',
+      role: "assistant",
       modelResponses: modelResponsePlaceholders,
       consensus: null, // Initialize consensus part
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    
+
     setMessages([...messages, userMessage, assistantMessage]);
     setIsLoading(true); // For initial batch of requests
-    setPrompt(''); // Clear the input
+    setPrompt(""); // Clear the input
 
     try {
       // Make requests for each active model
       const requests = activeModels.map(async (modelId) => {
         try {
-          const providerId = providers.find(p => 
-            p.models.some(m => m.id === modelId)
-          )?.id || 'google';
-          
-          const res = await fetch('/api/prompt', {
-            method: 'POST',
+          const providerId =
+            providers.find((p) => p.models.some((m) => m.id === modelId))?.id ||
+            "google";
+
+          const res = await fetch("/api/prompt", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
-            body: JSON.stringify({ 
-              prompt: userPromptWithCustomInstruction, // Use prompt with custom instruction
+            body: JSON.stringify({
+              prompt: userPromptWithCustomInstruction,
               model: modelId,
               provider: providerId,
-              settings: modelSettings[modelId] || {}
+              settings: modelSettings[modelId] || {},
             }),
           });
 
+          // Improved error handling - check response before parsing JSON
           if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.message || `HTTP error! Status: ${res.status}`);
+            let errorMessage = `HTTP error! Status: ${res.status}`;
+            try {
+              // Try to parse error response as JSON
+              const errorData = await res.json();
+              errorMessage = errorData.message || errorMessage;
+            } catch {
+              // If JSON parsing fails, try to get text instead
+              try {
+                const errorText = await res.text();
+                errorMessage = errorText || errorMessage;
+              } catch (textError) {
+                // Fallback if even text extraction fails
+                console.error("Could not extract error details:", textError);
+              }
+            }
+            throw new Error(errorMessage);
           }
 
-          const data = await res.json();
-          return { 
-            modelId, 
-            modelName: modelResponsePlaceholders[modelId]?.name || modelId, // Keep modelName for consensus prompt
+          // Safely parse the JSON response with error handling
+          let data;
+          try {
+            data = await res.json();
+          } catch (jsonError) {
+            console.error("JSON parsing error:", jsonError);
+            throw new Error("Invalid response format from server");
+          }
+
+          return {
+            modelId,
+            modelName: modelResponsePlaceholders[modelId]?.modelName || modelId,
             content: data.response,
             isLoading: false,
-            error: null 
+            error: null,
           };
         } catch (error) {
           console.error(`Error fetching response from ${modelId}:`, error);
-          return { 
+          return {
             modelId,
-            modelName: modelResponsePlaceholders[modelId]?.name || modelId,
+            modelName: modelResponsePlaceholders[modelId]?.modelName || modelId,
             content: null,
             isLoading: false,
-            error: error.message
+            error: error.message,
           };
         }
       });
 
       // Wait for all initial requests to complete
       const results = await Promise.all(requests);
-      
+
       // Update the response message with the actual responses
-      setMessages(prevMessages => 
-        prevMessages.map(msg => {
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) => {
           if (msg.id === assistantMessageId) {
             const updatedModelResponses = { ...msg.modelResponses };
-            results.forEach(result => {
+            results.forEach((result) => {
               if (updatedModelResponses[result.modelId]) {
                 updatedModelResponses[result.modelId] = {
                   ...updatedModelResponses[result.modelId],
-                  content: result.error ? `Error: ${result.error}` : result.content,
+                  content: result.error
+                    ? `Error: ${result.error}`
+                    : result.content,
                   isLoading: false,
-                  error: result.error
+                  error: result.error,
                 };
               }
             });
@@ -370,17 +431,18 @@ Please box your final answer in LaTeX if possible.`;
       );
 
       // --- Consensus Generation ---
-      const successfulResponses = results.filter(r => !r.error && r.content);
-      if (successfulResponses.length >= 1) { // Changed to >=1 for testing, ideally >=2
+      const successfulResponses = results.filter((r) => !r.error && r.content);
+      if (successfulResponses.length >= 1) {
+        // Changed to >=1 for testing, ideally >=2
         // Update UI to show consensus is loading
-        setMessages(prevMessages =>
-          prevMessages.map(msg => {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
             if (msg.id === assistantMessageId) {
               return {
                 ...msg,
                 consensus: {
                   isLoading: true,
-                  content: 'Generating consensus...',
+                  content: "Generating consensus...",
                   error: null,
                 },
               };
@@ -394,22 +456,29 @@ Please box your final answer in LaTeX if possible.`;
 Based on the following responses from different AI models, please synthesize a single, comprehensive consensus answer. Analyze the responses for agreement and disagreement, and provide a final answer that reflects the most likely correct or comprehensive information. Please box your final consensus answer in LaTeX if possible.
 
 `;
-        successfulResponses.forEach(response => {
+        successfulResponses.forEach((response) => {
           consensusPromptText += `Response from ${response.modelName}:
 ${response.content}
 
 `;
         });
 
-        const consensusModelId = 'gemini-2.0-flash';
-        const consensusProvider = providers.find(p => p.models.some(m => m.id === consensusModelId));
-        const consensusProviderId = consensusProvider ? consensusProvider.id : 'google';
-        const consensusModelSettings = modelSettings[consensusModelId] || { temperature: 0.5, maxTokens: 1000 }; // Specific settings for consensus
+        const consensusModelId = "gemini-2.0-flash";
+        const consensusProvider = providers.find((p) =>
+          p.models.some((m) => m.id === consensusModelId)
+        );
+        const consensusProviderId = consensusProvider
+          ? consensusProvider.id
+          : "google";
+        const consensusModelSettings = modelSettings[consensusModelId] || {
+          temperature: 0.5,
+          maxTokens: 1000,
+        }; // Specific settings for consensus
 
         try {
-          const consensusRes = await fetch('/api/prompt', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const consensusRes = await fetch("/api/prompt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               prompt: consensusPromptText,
               model: consensusModelId,
@@ -418,14 +487,37 @@ ${response.content}
             }),
           });
 
+          // Improved error handling for consensus call
           if (!consensusRes.ok) {
-            const errorData = await consensusRes.json();
-            throw new Error(errorData.message || `HTTP error! Status: ${consensusRes.status}`);
+            let errorMessage = `HTTP error! Status: ${consensusRes.status}`;
+            try {
+              const errorData = await consensusRes.json();
+              errorMessage = errorData.message || errorMessage;
+            } catch {
+              try {
+                const errorText = await consensusRes.text();
+                errorMessage = errorText || errorMessage;
+              } catch (textError) {
+                console.error("Could not extract error details:", textError);
+              }
+            }
+            throw new Error(errorMessage);
           }
-          const consensusData = await consensusRes.json();
-          
-          setMessages(prevMessages =>
-            prevMessages.map(msg => {
+
+          // Safely parse consensus JSON response
+          let consensusData;
+          try {
+            consensusData = await consensusRes.json();
+          } catch (jsonError) {
+            console.error(
+              "JSON parsing error in consensus response:",
+              jsonError
+            );
+            throw new Error("Invalid consensus response format from server");
+          }
+
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) => {
               if (msg.id === assistantMessageId) {
                 return {
                   ...msg,
@@ -439,11 +531,10 @@ ${response.content}
               return msg;
             })
           );
-
         } catch (consensusError) {
-          console.error('Error generating consensus:', consensusError);
-          setMessages(prevMessages =>
-            prevMessages.map(msg => {
+          console.error("Error generating consensus:", consensusError);
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) => {
               if (msg.id === assistantMessageId) {
                 return {
                   ...msg,
@@ -459,15 +550,22 @@ ${response.content}
           );
         }
       } else {
-         // If not enough successful responses for consensus, ensure consensus part is cleared or indicates no consensus
-         setMessages(prevMessages =>
-          prevMessages.map(msg => {
-            if (msg.id === assistantMessageId && successfulResponses.length < 2) { // Strictly less than 2 for "no consensus"
+        // If not enough successful responses for consensus, ensure consensus part is cleared or indicates no consensus
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            if (
+              msg.id === assistantMessageId &&
+              successfulResponses.length < 2
+            ) {
+              // Strictly less than 2 for "no consensus"
               return {
                 ...msg,
                 consensus: {
                   isLoading: false,
-                  content: successfulResponses.length === 1 ? 'Not enough responses to generate a consensus (only 1 successful response).' : 'No successful responses to generate a consensus.',
+                  content:
+                    successfulResponses.length === 1
+                      ? "Not enough responses to generate a consensus (only 1 successful response)."
+                      : "No successful responses to generate a consensus.",
                   error: null,
                 },
               };
@@ -476,18 +574,17 @@ ${response.content}
           })
         );
       }
-
     } catch (error) {
-      console.error('Error handling requests:', error);
+      console.error("Error handling requests:", error);
       // Add error message to chat
-      setMessages(prevMessages => [
-        ...prevMessages, 
+      setMessages((prevMessages) => [
+        ...prevMessages,
         {
           id: `error-${Date.now()}`,
-          role: 'system',
+          role: "system",
           content: `Error: ${error.message}`,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       ]);
     } finally {
       setIsLoading(false);
@@ -496,21 +593,21 @@ ${response.content}
 
   // Get active models with their provider information
   const getActiveModelDetails = () => {
-    return activeModels.map(modelId => {
-      const provider = providers.find(p => 
-        p.models.some(m => m.id === modelId)
+    return activeModels.map((modelId) => {
+      const provider = providers.find((p) =>
+        p.models.some((m) => m.id === modelId)
       );
-      const model = provider?.models.find(m => m.id === modelId);
-      
+      const model = provider?.models.find((m) => m.id === modelId);
+
       return {
         id: modelId,
         name: model?.name || modelId,
-        providerName: provider?.name || 'Unknown',
-        providerIcon: provider?.icon || '❓'
+        providerName: provider?.name || "Unknown",
+        providerIcon: provider?.icon || "❓",
       };
     });
   };
-  
+
   const activeModelDetails = getActiveModelDetails();
 
   return (
@@ -519,10 +616,10 @@ ${response.content}
       <header className="chat-header">
         <div className="header-left">
           <h1>Consensus</h1>
-          
+
           {/* Provider/Model selector dropdown */}
           <div className="model-selector-container" ref={modelSelectorRef}>
-            <button 
+            <button
               className="model-selector-button"
               onClick={() => setShowModelSelector(!showModelSelector)}
             >
@@ -530,29 +627,34 @@ ${response.content}
                 <span>Select Models</span>
               ) : (
                 <span>
-                  {activeModelDetails.length} model{activeModelDetails.length !== 1 ? 's' : ''} active
+                  {activeModelDetails.length} model
+                  {activeModelDetails.length !== 1 ? "s" : ""} active
                 </span>
               )}
               <span className="dropdown-arrow">▼</span>
             </button>
-            
+
             {showModelSelector && (
               <div className="model-dropdown">
-                {providers.map(provider => (
+                {providers.map((provider) => (
                   <div key={provider.id} className="provider-section">
                     <div className="provider-header">
-                      <span>{provider.icon} {provider.name}</span>
+                      <span>
+                        {provider.icon} {provider.name}
+                      </span>
                       {!provider.available && (
                         <span className="coming-soon-tag">Coming Soon</span>
                       )}
                     </div>
-                    
+
                     {provider.available && (
                       <div className="model-list">
-                        {provider.models.map(model => (
-                          <div 
+                        {provider.models.map((model) => (
+                          <div
                             key={model.id}
-                            className={`model-item ${activeModels.includes(model.id) ? 'active' : ''} ${!model.available ? 'disabled' : ''}`}
+                            className={`model-item ${
+                              activeModels.includes(model.id) ? "active" : ""
+                            } ${!model.available ? "disabled" : ""}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               if (model.available) {
@@ -561,7 +663,7 @@ ${response.content}
                             }}
                           >
                             <span className="model-checkbox">
-                              {activeModels.includes(model.id) ? '✓' : ''}
+                              {activeModels.includes(model.id) ? "✓" : ""}
                             </span>
                             <span className="model-name">{model.name}</span>
                             {!model.available && (
@@ -577,13 +679,21 @@ ${response.content}
             )}
           </div>
         </div>
-        
+
         <div className="header-right">
-          <button className="icon-button theme-toggle" title="Toggle theme" onClick={toggleTheme}>
-            {darkMode ? '☀️' : '🌙'}
+          <button
+            className="icon-button theme-toggle"
+            title="Toggle theme"
+            onClick={toggleTheme}
+          >
+            {darkMode ? "☀️" : "🌙"}
           </button>
-          <button className="icon-button" title="Settings">⚙️</button>
-          <button className="icon-button" title="Help">❓</button>
+          <button className="icon-button" title="Settings">
+            ⚙️
+          </button>
+          <button className="icon-button" title="Help">
+            ❓
+          </button>
         </div>
       </header>
 
@@ -594,7 +704,7 @@ ${response.content}
             <div className="empty-state-icon">💬</div>
             <h2>Welcome to Consensus</h2>
             <p>Select models and start chatting to compare responses</p>
-            <button 
+            <button
               className="select-models-button"
               onClick={() => setShowModelSelector(true)}
             >
@@ -602,90 +712,127 @@ ${response.content}
             </button>
           </div>
         ) : (
-          messages.map(message => (
-            <div 
-              key={message.id} 
-              className={`message ${message.role}`}
-            >
-              {message.role === 'user' ? (
+          messages.map((message) => (
+            <div key={message.id} className={`message ${message.role}`}>
+              {message.role === "user" ? (
                 <>
                   <div className="user-avatar">👤</div>
                   <div className="message-content">
                     {/* Render user message content */}
-                    <div dangerouslySetInnerHTML={{ __html: renderFormattedContent(message.content) }} />
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: renderFormattedContent(message.content),
+                      }}
+                    />
                   </div>
                 </>
-              ) : message.role === 'system' ? (
-                <div className="system-message">
-                  {message.content}
-                </div>
+              ) : message.role === "system" ? (
+                <div className="system-message">{message.content}</div>
               ) : (
                 <div className="assistant-responses">
-                  {Object.entries(message.modelResponses).map(([modelId, response]) => {
-                    const settings = modelSettings[modelId] || { visible: true };
-                    return (
-                      <div 
-                        key={modelId} 
-                        className={`model-response ${!settings.visible ? 'collapsed' : ''}`}
-                      >
-                        <div 
-                          className="model-response-header"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleModelVisibility(modelId);
-                          }}
+                  {Object.entries(message.modelResponses).map(
+                    ([modelId, response]) => {
+                      const settings = modelSettings[modelId] || {
+                        visible: true,
+                      };
+                      return (
+                        <div
+                          key={modelId}
+                          className={`model-response ${
+                            !settings.visible ? "collapsed" : ""
+                          }`}
                         >
-                          <div className="model-info">
-                            <span className="model-icon">{response.providerIcon}</span>
-                            <span className="model-name">{response.modelName}</span>
-                            {response.isLoading && <span className="loading-indicator">⏳</span>}
-                            {response.error && <span className="error-indicator">⚠️</span>}
+                          <div
+                            className="model-response-header"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleModelVisibility(modelId);
+                            }}
+                          >
+                            <div className="model-info">
+                              <span className="model-icon">
+                                {response.providerIcon}
+                              </span>
+                              <span className="model-name">
+                                {response.modelName}
+                              </span>
+                              {response.isLoading && (
+                                <span className="loading-indicator">⏳</span>
+                              )}
+                              {response.error && (
+                                <span className="error-indicator">⚠️</span>
+                              )}
+                            </div>
+                            <div className="model-controls">
+                              <button
+                                className={`model-setting-button ${
+                                  modelSettings[modelId]?.useInternet
+                                    ? "active"
+                                    : ""
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleModelSetting(modelId, "useInternet");
+                                }}
+                                title="Toggle Internet Access"
+                              >
+                                🌐
+                              </button>
+                              {/* Add more controls here if needed */}
+                            </div>
                           </div>
-                          <div className="model-controls">
-                            <button 
-                              className={`model-setting-button ${modelSettings[modelId]?.useInternet ? 'active' : ''}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleModelSetting(modelId, 'useInternet');
-                              }}
-                              title="Toggle Internet Access"
-                            >
-                              🌐
-                            </button>
-                            {/* Add more controls here if needed */}
-                          </div>
+                          {settings.visible && (
+                            <div className="model-response-content">
+                              {response.isLoading ? (
+                                <div className="skeleton-loader"></div>
+                              ) : response.error ? (
+                                <div className="error-message">
+                                  {response.error}
+                                </div>
+                              ) : (
+                                <div
+                                  dangerouslySetInnerHTML={{
+                                    __html: renderFormattedContent(
+                                      response.content
+                                    ),
+                                  }}
+                                />
+                              )}
+                            </div>
+                          )}
                         </div>
-                        {settings.visible && (
-                          <div className="model-response-content">
-                            {response.isLoading ? (
-                              <div className="skeleton-loader"></div>
-                            ) : response.error ? (
-                              <div className="error-message">{response.error}</div>
-                            ) : (
-                              <div dangerouslySetInnerHTML={{ __html: renderFormattedContent(response.content) }} />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                  
+                      );
+                    }
+                  )}
+
                   {/* Consensus Response Section */}
                   {message.consensus && (
                     <div className="consensus-response">
                       <div className="consensus-header">
                         <span className="consensus-icon">🤝</span>
                         <span>Consensus (via Gemini 2.0 Flash)</span>
-                        {message.consensus.isLoading && <span className="loading-indicator">⏳</span>}
-                        {message.consensus.error && <span className="error-indicator">⚠️</span>}
+                        {message.consensus.isLoading && (
+                          <span className="loading-indicator">⏳</span>
+                        )}
+                        {message.consensus.error && (
+                          <span className="error-indicator">⚠️</span>
+                        )}
                       </div>
                       <div className="consensus-content">
                         {message.consensus.isLoading ? (
                           <div className="skeleton-loader"></div> // Or simply message.consensus.content which is "Generating..."
                         ) : message.consensus.error ? (
-                          <div className="error-message">{message.consensus.error}</div>
+                          <div className="error-message">
+                            {message.consensus.error}
+                          </div>
                         ) : message.consensus.content ? (
-                          <div dangerouslySetInnerHTML={{ __html: renderFormattedContent(message.consensus.content) }} />
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: renderFormattedContent(
+                                message.consensus.content
+                              ),
+                            }}
+                          />
                         ) : (
                           <p>No consensus generated.</p> // Fallback if content is null/empty but no error
                         )}
@@ -706,11 +853,13 @@ ${response.content}
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder={activeModels.length === 0 
-              ? "Select models first..." 
-              : "Type your message..."}
+            placeholder={
+              activeModels.length === 0
+                ? "Select models first..."
+                : "Type your message..."
+            }
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleSubmit();
               }
@@ -724,19 +873,21 @@ ${response.content}
             <button
               className="submit-button"
               onClick={handleSubmit}
-              disabled={isLoading || !prompt.trim() || activeModels.length === 0}
+              disabled={
+                isLoading || !prompt.trim() || activeModels.length === 0
+              }
             >
-              {isLoading ? '⏳' : '➤'}
+              {isLoading ? "⏳" : "➤"}
             </button>
           </div>
         </div>
-        
+
         <div className="active-models-chips">
-          {activeModelDetails.map(model => (
+          {activeModelDetails.map((model) => (
             <div key={model.id} className="model-chip">
               <span className="model-icon">{model.providerIcon}</span>
               <span className="model-name">{model.name}</span>
-              <button 
+              <button
                 className="remove-model"
                 onClick={(e) => {
                   e.stopPropagation();
