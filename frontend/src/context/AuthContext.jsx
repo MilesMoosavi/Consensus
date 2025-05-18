@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isGuestSession, setIsGuestSession] = useState(false); // New state for guest session
+  const [isGuestSession, setIsGuestSession] = useState(false);
 
   // Initialize: Check if user is already logged in or if it's a guest session
   useEffect(() => {
@@ -22,51 +22,61 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       try {
         const token = localStorage.getItem('authToken');
-        const guestModeActive = StorageService.isGuestMode();
-
         if (token) {
           const response = await fetch('/api/auth/verify-token', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` },
           });
           const data = await response.json();
           if (data.isValid) {
             setUser(data.user);
             setIsAuthenticated(true);
-            setIsGuestSession(false); // Ensure guest session is false if authenticated
-            StorageService.disableGuestMode(); // If there's a token, disable guest mode
+            setIsGuestSession(false); // Real user, not guest
+            StorageService.disableGuestMode(); // Clean up any old guest stuff
           } else {
             localStorage.removeItem('authToken');
-            // Token invalid, now check for guest mode
-            if (guestModeActive) {
-              setUser(null); // No user object for guest
-              setIsAuthenticated(true); // Grant access for guest
-              setIsGuestSession(true);
-            } else {
-              setIsAuthenticated(false);
-              setIsGuestSession(false);
-            }
+            StorageService.disableGuestMode(); // Ensure guest mode is off if token is invalid
+            setIsAuthenticated(false);
+            setIsGuestSession(false);
           }
-        } else if (guestModeActive) {
-          setUser(null); // No user object for guest
-          setIsAuthenticated(true); // Grant access for guest
-          setIsGuestSession(true);
         } else {
+          // No token. Any previous guest mode flag in localStorage is cleared on page load.
+          // User will be redirected to /login by ProtectedRoute and can choose to be a guest again.
+          StorageService.disableGuestMode(); // Clears GUEST_MODE_KEY and guest conversation
           setIsAuthenticated(false);
           setIsGuestSession(false);
         }
       } catch (err) {
         console.error('Auth check error:', err);
-        setError('Failed to verify authentication status');
+        localStorage.removeItem('authToken');
+        StorageService.disableGuestMode();
         setIsAuthenticated(false);
         setIsGuestSession(false);
+        setError('Failed to verify authentication status');
       } finally {
         setLoading(false);
       }
     };
     checkAuthStatus();
-  }, []); // Removed navigate from dependencies as it's not used here
+  }, []);
+
+  // Activate guest session
+  const activateGuestSession = () => {
+    StorageService.enableGuestMode();
+    setUser(null); // No user object for guest
+    setIsAuthenticated(true); // Grant access for guest
+    setIsGuestSession(true);
+    setError(null);
+    // setLoading(false); // setLoading is usually for initial load
+  };
+
+  // Switch to login (clear guest session)
+  const switchToLogin = () => {
+    StorageService.disableGuestMode(); // Clears guest flag and conversation
+    setUser(null);
+    setIsAuthenticated(false);
+    setIsGuestSession(false);
+    // Navigation to /login will be handled by ProtectedRoute or consuming components
+  };
 
   // Login function
   const login = async (token) => {
@@ -74,29 +84,26 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.setItem('authToken', token);
       const response = await fetch('/api/auth/verify-token', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` },
       });
       const data = await response.json();
       if (data.isValid) {
         setUser(data.user);
         setIsAuthenticated(true);
         setIsGuestSession(false); // Logged in, so not a guest session
-        StorageService.disableGuestMode(); // Clear guest mode on successful login
+        StorageService.disableGuestMode(); // Clear any guest mode artifacts
         setLoading(false);
         return true;
       } else {
-        await logout(); // Use await here
+        await logout(); // Token was bad
         setError('Invalid authentication token');
         setLoading(false);
         return false;
       }
     } catch (err) {
       console.error('Login error:', err);
+      await logout(); // Ensure clean state on error
       setError('Failed to login');
-      setIsAuthenticated(false);
-      setIsGuestSession(false);
       setLoading(false);
       return false;
     }
@@ -104,20 +111,19 @@ export const AuthProvider = ({ children }) => {
 
   // Logout function
   const logout = async () => {
-    setLoading(true);
+    // setLoading(true); // Optional: setLoading during logout
     try {
-      await fetch('/api/auth/logout'); // Assuming this endpoint exists and handles server-side session invalidation
+      await fetch('/api/auth/logout'); 
     } catch (err) {
       console.error('Logout API call error:', err);
-      // Continue with client-side logout even if API call fails
     } finally {
       localStorage.removeItem('authToken');
-      StorageService.disableGuestMode(); // Ensure guest mode is disabled on logout
+      StorageService.disableGuestMode(); // Ensure guest mode is disabled
       setUser(null);
       setIsAuthenticated(false);
       setIsGuestSession(false);
-      setLoading(false);
-      // navigate('/login'); // Consider if navigation should be here or handled by consuming components
+      // setLoading(false);
+      // Navigation to /login is typically handled by the component initiating logout
     }
   };
 
@@ -178,20 +184,27 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Value provided to consumers
-  const value = {
+  const contextValue = {
     user,
     isAuthenticated,
-    isGuestSession, // Expose guest session status
     loading,
     error,
+    isGuestSession,
     login,
     logout,
+    activateGuestSession,
+    switchToLogin, // Added
     getUserProfile,
-    updateUserPreferences
+    updateUserPreferences,
   };
 
+  if (loading) {
+    // Consider a global loading indicator or null to prevent premature rendering
+    return <div>Loading authentication...</div>; 
+  }
+
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -3,34 +3,33 @@ import StorageService from '../services/StorageService';
 import './GuestModeToggle.css';
 
 const GuestModeToggle = ({ isGuestMode, onGuestModeChange }) => {
-  const handleGuestModeToggle = () => {
-    const newGuestMode = !isGuestMode;
-    
-    if (newGuestMode) {
+  const handleToggle = (event) => {
+    const newGuestModeState = event.target.checked;
+    if (newGuestModeState) {
       StorageService.enableGuestMode();
     } else {
       StorageService.disableGuestMode();
     }
-    
-    onGuestModeChange(newGuestMode);
+    onGuestModeChange(newGuestModeState);
   };
 
   return (
-    <div className="guest-mode-toggle">
-      <button 
-        className={`toggle-button ${isGuestMode ? 'active' : ''}`}
-        onClick={handleGuestModeToggle}
-        title={isGuestMode ? "Temporary chat mode active" : "Enable temporary chat mode"}
-      >
-        {isGuestMode ? '🕒' : '💾'} 
-        <span className="toggle-label">
-          {isGuestMode ? 'Temporary Chat' : 'Persistent Chat'}
-        </span>
-      </button>
+    <div className="guest-mode-toggle-container">
+      <label htmlFor="guest-mode-checkbox" className="guest-mode-label">
+        <input
+          type="checkbox"
+          id="guest-mode-checkbox"
+          className="guest-mode-checkbox"
+          checked={isGuestMode}
+          onChange={handleToggle}
+          title={isGuestMode ? "Temporary chat mode active (conversations not saved after session)" : "Switch to persistent chat (requires login, conversations saved)"}
+        />
+        Temporary Chat
+      </label>
       {isGuestMode && (
         <div className="guest-mode-info">
           <span className="info-icon">ℹ️</span>
-          <span className="info-text">Conversations will be deleted on page reload</span>
+          <span className="info-text">Conversations are not saved</span>
         </div>
       )}
     </div>

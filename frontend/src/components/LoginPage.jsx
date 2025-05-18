@@ -2,11 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import StorageService from '../services/StorageService'; // Import StorageService
 import './LoginPage.css';
 
 const LoginPage = () => {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, activateGuestSession } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState('');
@@ -46,12 +45,8 @@ const LoginPage = () => {
   };
 
   const handleGuestLogin = () => {
-    StorageService.enableGuestMode();
-    // The AuthProvider or App component should ideally handle navigation
-    // based on guest mode status upon initialization.
-    // For a direct approach here, we can navigate.
-    // However, a more robust solution would involve AuthContext recognizing guest mode.
-    navigate('/'); // Re-add navigation after enabling guest mode
+    activateGuestSession(); // Call the new function from AuthContext
+    navigate('/');
   };
 
   return (

@@ -7,6 +7,7 @@ import ThemeService from "../services/ThemeService";
 import { renderFormattedContent } from "../utils/formatters";
 import GuestModeToggle from "./GuestModeToggle";
 import "./MainChatApp.css";
+import { useAuth } from "../context/AuthContext"; // Import useAuth
 
 const MainChatApp = () => {
   const [prompt, setPrompt] = useState("");
@@ -16,21 +17,18 @@ const MainChatApp = () => {
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [modelSettings, setModelSettings] = useState({});
   const [darkMode, setDarkMode] = useState(true);
-  const [isGuestMode, setIsGuestMode] = useState(false);
+  const { isGuestSession, switchToLogin } = useAuth(); // Use isGuestSession from AuthContext
   const messagesEndRef = useRef(null);
   const modelSelectorRef = useRef(null);
 
   // Initialize model settings and theme on component mount
   useEffect(() => {
-    // Load theme
     const isDarkMode = ThemeService.initializeTheme();
     setDarkMode(isDarkMode);
 
-    // Check if guest mode is active
-    const guestModeActive = StorageService.isGuestMode();
-    setIsGuestMode(guestModeActive);
+    // Guest mode status is now managed by AuthContext, which runs on initial load.
+    // MainChatApp will reflect isGuestSession from AuthContext.
 
-    // Load saved settings from localStorage if available
     const savedActiveModels = StorageService.getActiveModels();
     const savedModelSettings = StorageService.getModelSettings();
 
@@ -41,7 +39,6 @@ const MainChatApp = () => {
     if (savedModelSettings) {
       setModelSettings(savedModelSettings);
     } else {
-      // Initialize default settings for each model
       const initialSettings = {};
       providerModelData.forEach((provider) => {
         provider.models.forEach((model) => {
@@ -56,30 +53,33 @@ const MainChatApp = () => {
       setModelSettings(initialSettings);
     }
 
-    // Load previous conversation if in guest mode
-    if (guestModeActive) {
-      const previousConversation = ConversationService.loadPreviousConversation();
+    // Load previous conversation ONLY if it's a guest session AND messages are empty
+    // This prevents re-loading and overwriting if navigating back/forth within the app
+    // during an active guest session.
+    // The actual clearing of guest conversation on refresh is handled by AuthContext.
+    if (isGuestSession && messages.length === 0) {
+      const previousConversation = ConversationService.loadPreviousConversation(); // This still reads from localStorage
       if (previousConversation && previousConversation.length > 0) {
         setMessages(previousConversation);
       }
     }
-  }, []);
+  }, [isGuestSession, messages.length]); // Depend on isGuestSession and messages.length
 
-  // Save settings whenever they change
+  // Save settings and guest conversation (if applicable)
   useEffect(() => {
     if (activeModels.length > 0) {
       StorageService.saveActiveModels(activeModels);
     }
-    
     if (Object.keys(modelSettings).length > 0) {
       StorageService.saveModelSettings(modelSettings);
     }
-    
-    // Save conversation if in guest mode
-    if (isGuestMode && messages.length > 0) {
+    // Save conversation to localStorage if in a guest session and there are messages.
+    // This allows it to be picked up by loadPreviousConversation if the user navigates
+    // away and back within the same guest session (before a full refresh that clears it).
+    if (isGuestSession && messages.length > 0) {
       ConversationService.saveCurrentConversation(messages);
     }
-  }, [activeModels, modelSettings, messages, isGuestMode]);
+  }, [activeModels, modelSettings, messages, isGuestSession]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -111,17 +111,26 @@ const MainChatApp = () => {
   };
 
   // Handle guest mode toggle
-  const handleGuestModeToggle = (newGuestMode) => {
-    setIsGuestMode(newGuestMode);
-    
-    if (newGuestMode) {
-      // If enabling guest mode, save current conversation
-      if (messages.length > 0) {
-        ConversationService.saveCurrentConversation(messages);
+  const handleGuestModeToggle = (newGuestModeCheckboxState) => {
+    if (newGuestModeCheckboxState) {
+      // This case should ideally not happen if already in guest session,
+      // but if it does, it means we are re-activating guest mode.
+      // AuthContext.activateGuestSession() should have been called from LoginPage.
+      // Here, we just ensure UI consistency if needed, but AuthContext is the source of truth.
+      // setIsGuestMode(true); // No longer directly setting local state
+      // If for some reason activateGuestSession wasn't called, this is a fallback logic.
+      // This path is less likely if LoginPage correctly calls activateGuestSession.
+      if (!isGuestSession) {
+        // This implies a manual toggle from a non-guest state to guest state
+        // which should ideally re-route to login to click "Continue as Guest"
+        // For now, we'll just log it. This toggle is more for *disabling* guest mode.
+        console.warn("GuestModeToggle trying to enable guest mode; should be handled by LoginPage/AuthContext.activateGuestSession");
       }
     } else {
-      // If disabling guest mode, clear stored conversation
-      ConversationService.clearConversation();
+      // Checkbox is UNCHECKED, meaning user wants to exit temporary/guest mode.
+      // This should lead to the login page.
+      switchToLogin(); // Call AuthContext function to clear guest state
+      // Navigation to /login will be handled by ProtectedRoute due to auth state change.
     }
   };
 
@@ -234,12 +243,13 @@ Please box your final answer in LaTeX if possible.`;
       const results = await Promise.all(requests);
 
       // Update the response message with the actual responses
-      const updatedMessages = ConversationService.updateAssistantMessage(
-        messages,
-        assistantMessage.id,
-        results
+      setMessages((prevMessages) =>
+        ConversationService.updateAssistantMessage(
+          prevMessages,
+          assistantMessage.id,
+          results
+        )
       );
-      setMessages(updatedMessages);
 
       // --- Consensus Generation ---
       const successfulResponses = results.filter((r) => !r.error && r.content);
@@ -398,7 +408,7 @@ Please box your final answer in LaTeX if possible.`;
 
         <div className="header-right">
           <GuestModeToggle 
-            isGuestMode={isGuestMode}
+            isGuestMode={isGuestSession}
             onGuestModeChange={handleGuestModeToggle}
           />
           <button
@@ -424,7 +434,7 @@ Please box your final answer in LaTeX if possible.`;
             <div className="empty-state-icon">💬</div>
             <h2>Welcome to Consensus</h2>
             <p>Select models and start chatting to compare responses</p>
-            {isGuestMode && (
+            {isGuestSession && (
               <p className="guest-mode-notice">
                 You're in temporary chat mode. Conversations will be cleared on page reload.
               </p>
