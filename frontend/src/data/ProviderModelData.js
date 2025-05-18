@@ -50,11 +50,13 @@ export const providerModelData = [
   {
     id: "openai",
     name: "OpenAI",
-    icon: "🤖",
-    available: false,
+    icon: "🤖", // Or any other icon you prefer for OpenAI
+    available: true, // Changed from false to true
     models: [
-      { id: "gpt-4", name: "GPT-4", available: false },
-      { id: "gpt-4o", name: "GPT-4o", available: false },
+      { id: "gpt-4o", name: "GPT-4o", available: true }, // Changed from false to true
+      { id: "gpt-4", name: "GPT-4", available: true }, // Changed from false to true
+      // You can add other OpenAI models here if needed, e.g.:
+      // { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo", available: true },
     ],
   },
   {

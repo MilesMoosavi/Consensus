@@ -14,6 +14,7 @@
 - [ ] Enhance Markdown/LaTeX visual styling (e.g., title sizes, list indentation, blockquote styling)
 
 ## Features
+- [ ] Implement search/filter functionality within the model selector UI.
 - [ ] Implement streaming responses for individual LLM outputs
 - [x] Add conversation history:
   - [ ] Persistent conversations
