@@ -51,7 +51,7 @@ const LoginPage = () => {
     // based on guest mode status upon initialization.
     // For a direct approach here, we can navigate.
     // However, a more robust solution would involve AuthContext recognizing guest mode.
-    navigate('/'); 
+    navigate('/'); // Re-add navigation after enabling guest mode
   };
 
   return (
