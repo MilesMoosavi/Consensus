@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import StorageService from '../services/StorageService'; // Import StorageService
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -44,6 +45,15 @@ const LoginPage = () => {
     window.location.href = '/api/auth/google';
   };
 
+  const handleGuestLogin = () => {
+    StorageService.enableGuestMode();
+    // The AuthProvider or App component should ideally handle navigation
+    // based on guest mode status upon initialization.
+    // For a direct approach here, we can navigate.
+    // However, a more robust solution would involve AuthContext recognizing guest mode.
+    navigate('/'); 
+  };
+
   return (
     <div className="login-container">
       <div className="login-card">
@@ -65,6 +75,12 @@ const LoginPage = () => {
               className="google-icon" 
             />
             Sign in with Google
+          </button>
+          <button
+            onClick={handleGuestLogin}
+            className="guest-login-button" // Add a new class for styling
+          >
+            Continue as Guest
           </button>
         </div>
         
