@@ -928,6 +928,23 @@ button:disabled {
   line-height: 1;
 }
 
+/* Guest mode styles */
+.guest-mode-notice {
+  font-size: 0.9rem;
+  color: var(--warning-color);
+  background-color: rgba(243, 156, 18, 0.1);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-mode .guest-mode-notice {
+  background-color: rgba(243, 156, 18, 0.15);
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .chat-messages {

@@ -1,0 +1,65 @@
+.guest-mode-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.toggle-button {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.toggle-button:hover {
+  background-color: var(--bg-hover);
+}
+
+.toggle-button.active {
+  background-color: var(--accent-color-light);
+  border-color: var(--accent-color);
+}
+
+.toggle-label {
+  margin-left: 6px;
+}
+
+.guest-mode-info {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  color: var(--text-muted);
+}
+
+.info-icon {
+  margin-right: 5px;
+  font-size: 0.9rem;
+}
+
+/* Dark mode styles */
+.dark-mode .toggle-button {
+  background-color: var(--dark-bg-secondary);
+  border-color: var(--dark-border-color);
+  color: var(--dark-text-color);
+}
+
+.dark-mode .toggle-button:hover {
+  background-color: var(--dark-bg-hover);
+}
+
+.dark-mode .toggle-button.active {
+  background-color: var(--dark-accent-color-light);
+  border-color: var(--dark-accent-color);
+}
+
+.dark-mode .guest-mode-info {
+  color: var(--dark-text-muted);
+}

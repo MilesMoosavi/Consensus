@@ -15,11 +15,16 @@
 
 ## Features
 - [ ] Implement streaming responses for individual LLM outputs
-- [ ] Add conversation history:
+- [x] Add conversation history:
   - [ ] Persistent conversations
-  - [ ] Temporary chat mode (deletes on refresh)
+  - [x] Temporary chat mode (deletes on refresh)
   - [ ] Left sidebar for conversation list
   - [ ] Ability to rename/delete conversations
+- [x] Implement user authentication:
+  - [x] Set up Google Sign-In integration
+  - [ ] (Optional) Email/password authentication
+  - [x] User profile page
+  - [x] Session management
 - [ ] Refine Consensus Generation:
   - [ ] Output: Tally unique responses (e.g., "True: 2, False: 3")
   - [ ] Output: Provide a concise consensus statement (e.g., "Consensus: False")
@@ -40,4 +45,18 @@
 - [x] Improve state management with functional updates (completed)
 - [ ] Add proper error handling for API calls (display user-friendly messages)
 - [ ] Implement proper loading states (more granular, e.g., per model response, consensus loading)
+- [x] Set up authentication infrastructure:
+  - [x] Create API routes for authentication flows
+  - [x] Secure data storage for user information 
+  - [x] Set up protected routes in frontend
 - [ ] Add unit and integration tests
+- [x] Consolidate LaTeX/Markdown rendering:
+  - [x] Extract renderFormattedContent from App.jsx into a shared utility
+  - [x] Update imports in App.jsx to use the shared utility
+  - [ ] Replace Storybook implementation in renderFormatted.js with the shared utility
+  - [ ] Ensure consistent rendering behavior between main app and Storybook
+- [x] Modularize App.jsx:
+  - [x] Create utility functions
+  - [x] Create API service
+  - [x] Extract UI components
+  - [x] Improve code organization
