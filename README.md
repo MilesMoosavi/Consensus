@@ -6,7 +6,7 @@ A prototype application showcasing responses from multiple LLMs (Large Language 
 
 Below are some example screenshots of the application in action:
 
-![Demo Image 1](./repo-imgs/demo-img-1.png)
-![Demo Image 2](./repo-imgs/demo-img-2.png)
-![Demo Image 3](./repo-imgs/demo-img-3.png)
-![Demo Image 4](./repo-imgs/demo-img-4.png)
+1.  **Welcome/Login Screen**: The initial screen for user sign-in or guest access.
+    ![Welcome/Login Screen](./repo-imgs/img-1.png)
+2.  **Main Chat Interface & Model Selection**: Shows the primary chat view with a prompt, multiple model responses, and the model selector open.
+    ![Main Chat Interface & Model Selection](./repo-imgs/img-2.png)
