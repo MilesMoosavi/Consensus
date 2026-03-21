@@ -1,0 +1,4 @@
+# Required dependencies for GitHub Models integration
+@azure-rest/ai-inference
+@azure/core-auth
+dotenv

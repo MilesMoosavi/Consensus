@@ -1,0 +1,43 @@
+// Import your CSS files here to apply styling in Storybook
+import '../src/index.css';
+import '../src/App.css';
+import React from 'react';
+
+// Add a wrapper to support light/dark mode
+const withThemeProvider = (Story, context) => {
+  // Get the current background value from the story parameters
+  const background = context.parameters.backgrounds?.values.find(
+    (bg) => bg.name === (context.parameters.backgrounds?.default || 'light')
+  );
+  
+  // Add dark-mode class if using dark background
+  const isDarkMode = background?.name === 'dark';
+
+  return (
+    <div className={isDarkMode ? 'dark-mode' : ''} style={{ padding: '1rem' }}>
+      <Story />
+    </div>
+  );
+};
+
+/** @type { import('@storybook/react').Preview } */
+const preview = {
+  parameters: {
+    controls: {
+      matchers: {
+       color: /(background|color)$/i,
+       date: /Date$/i,
+      },
+    },
+    backgrounds: {
+      default: 'dark',
+      values: [
+        { name: 'light', value: '#f5f5f5' },
+        { name: 'dark', value: '#121212' },
+      ],
+    },
+  },
+  decorators: [withThemeProvider],
+};
+
+export default preview;

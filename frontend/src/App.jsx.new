@@ -1,0 +1,33 @@
+// filepath: c:\Users\the10\OneDrive\Documents\GitHub\Consensus\frontend\src\App.jsx
+import { Route, Routes, Navigate } from "react-router-dom";
+import "./App.css";
+import { useAuth } from "./context/AuthContext";
+import LoginPage from "./components/LoginPage";
+import UserProfile from "./components/UserProfile";
+import ProtectedRoute from "./components/ProtectedRoute";
+import MainChatApp from "./components/MainChatApp";
+
+function App() {
+  const { isAuthenticated } = useAuth();
+  
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/success" element={<LoginPage />} />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <UserProfile />
+        </ProtectedRoute>
+      } />
+      <Route path="/" element={
+        isAuthenticated ? (
+          <MainChatApp />
+        ) : (
+          <Navigate to="/login" replace />
+        )
+      } />
+    </Routes>
+  );
+}
+
+export default App;

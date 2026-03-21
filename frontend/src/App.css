@@ -532,8 +532,28 @@ button:disabled {
   justify-content: center;
   text-align: center;
   padding: 40px;
-  color: #666;
   color: var(--text-secondary);
+}
+
+.deprecation-note {
+  font-weight: 500;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+}
+
+.redirect-link {
+  color: #007AFF;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  display: inline-block;
+  margin-top: 0.5rem;
+  transition: opacity 0.2s;
+}
+
+.redirect-link:hover {
+  opacity: 0.8;
 }
 
 .empty-state-icon {
@@ -926,6 +946,23 @@ button:disabled {
   font-size: 1rem;
   padding: 0 2px;
   line-height: 1;
+}
+
+/* Guest mode styles */
+.guest-mode-notice {
+  font-size: 0.9rem;
+  color: var(--warning-color);
+  background-color: rgba(243, 156, 18, 0.1);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-mode .guest-mode-notice {
+  background-color: rgba(243, 156, 18, 0.15);
 }
 
 /* Responsive styles */

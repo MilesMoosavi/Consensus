@@ -54,3 +54,48 @@ coverage
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+
+# Development notes and temporary files (personal)
+TODO.md
+RECAP.md
+NOTES.md
+DEV_NOTES.md
+SCRATCH.md
+DEVELOPMENT.md
+
+# Script outputs and temporary directories
+scripts/output/
+scripts/temp/
+temp/
+tmp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.tmp
+*.temp
+
+# Build outputs
+dist/
+build/
+dist-ssr/
+
+# Storybook
+storybook-static/
+*storybook.log
+
+# IDE files
+.idea/
+*.swp
+*.swo
+*~
+.history/
+
+# Local development
+*.local
+.cache/

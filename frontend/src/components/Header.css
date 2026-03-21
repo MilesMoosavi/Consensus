@@ -1,0 +1,74 @@
+/* Header user-related styles */
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent-color);
+}
+
+.user-initial {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.login-button {
+  padding: 6px 12px;
+  background-color: var(--accent-color);
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.login-button:hover {
+  background-color: var(--accent-hover-color);
+}
+
+.logout-button {
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.logout-button:hover {
+  opacity: 1;
+}
+
+/* Dark mode adjustments */
+.dark-mode .user-avatar {
+  border-color: var(--dark-accent-color);
+}
+
+.dark-mode .user-initial {
+  background-color: var(--dark-accent-color);
+}
+
+.dark-mode .login-button {
+  background-color: var(--dark-accent-color);
+}
+
+.dark-mode .login-button:hover {
+  background-color: var(--dark-accent-hover-color);
+}
