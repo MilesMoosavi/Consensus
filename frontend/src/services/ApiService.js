@@ -62,7 +62,72 @@ class ApiService {
     }
   
     /**
-     * Generates a consensus from multiple model responses
+     * Generates a consensus from multiple model responses using the new consensus API
+     * @param {string} prompt - The user's prompt
+     * @param {Array} models - Array of model IDs to query
+     * @param {Object} options - Additional options
+     * @returns {Promise<Object>} The consensus response
+     */
+    static async generateMultiModelConsensus(prompt, models, options = {}) {
+      try {
+        const res = await fetch(`${this.API_URL}/consensus`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prompt,
+            models,
+            options
+          }),
+        });
+
+        if (!res.ok) {
+          let errorMessage = `HTTP error! Status: ${res.status}`;
+          try {
+            const errorData = await res.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch {
+            try {
+              const errorText = await res.text();
+              errorMessage = errorText || errorMessage;
+            } catch (textError) {
+              console.error("Could not extract error details:", textError);
+            }
+          }
+          throw new Error(errorMessage);
+        }
+
+        const data = await res.json();
+        return data;
+      } catch (error) {
+        console.error("Error generating multi-model consensus:", error);
+        throw error;
+      }
+    }
+
+    /**
+     * Get available models for consensus
+     * @returns {Promise<Array>} List of available consensus models
+     */
+    static async getConsensusModels() {
+      try {
+        const response = await fetch(`${this.API_URL}/consensus/models`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch consensus models. Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Error fetching consensus models:", error);
+        throw error;
+      }
+    }
+
+    /**
+     * Generates a consensus from multiple model responses (LEGACY - using Gemini)
      * @param {string} originalPrompt - The user's original prompt
      * @param {Array} modelResponses - Array of successful model responses
      * @param {string} consensusModelId - Model ID to use for consensus generation
@@ -107,13 +172,23 @@ class ApiService {
      */
     static async getModels(provider) {
       try {
+        console.log(`ApiService: Fetching models for ${provider} from ${this.API_URL}/models/${provider}`);
         const response = await fetch(`${this.API_URL}/models/${provider}`);
-        return response.data;
+        console.log(`ApiService: Response status for ${provider}: ${response.status}`);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`ApiService: Error fetching models for ${provider}. Status: ${response.status}, Body: ${errorText}`);
+          throw new Error(`Failed to fetch models for ${provider}. Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log(`ApiService: Successfully fetched models for ${provider}:`, data);
+        return data;
       } catch (error) {
-        console.error(`Error fetching models for ${provider}:`, error);
-        // Optionally, rethrow the error or return a default/empty array
-        // depending on how you want the frontend to handle this.
-        throw error; // Rethrowing for now, so the caller can handle it
+        console.error(`ApiService: Catch block - Error fetching models for ${provider}:`, error);
+        // Rethrowing so the component can handle it (e.g., show an error message)
+        throw error;
       }
     }
   }

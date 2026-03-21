@@ -8,7 +8,9 @@ const MessageList = ({ messages, renderFormattedContent, messagesEndRef }) => {
     <div className="chat-messages">
       {messages.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">💬</div>
+          <div className="empty-state-icon">
+            <img src="/consensus-icon.svg" alt="Consensus" style={{ width: '64px', height: '64px' }} />
+          </div>
           <h2>Welcome to Consensus</h2>
           <p>Select models and start chatting to compare responses</p>
         </div>

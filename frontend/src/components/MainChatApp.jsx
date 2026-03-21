@@ -431,9 +431,15 @@ Please box your final answer in LaTeX if possible.`;
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">💬</div>
+            <div className="empty-state-icon">
+              <img src="/consensus-icon.svg" alt="Consensus" style={{ width: '64px', height: '64px' }} />
+            </div>
             <h2>Welcome to Consensus</h2>
-            <p>Select models and start chatting to compare responses</p>
+            <p className="deprecation-note">
+              This site is a deprecated prototype. For the latest version, please visit:
+              <br />
+              <a href="https://milesmoosavi.me/projects/funnel" className="redirect-link">milesmoosavi.me/projects/funnel</a>
+            </p>
             {isGuestSession && (
               <p className="guest-mode-notice">
                 You're in temporary chat mode. Conversations will be cleared on page reload.

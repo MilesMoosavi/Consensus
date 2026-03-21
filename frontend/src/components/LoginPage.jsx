@@ -53,8 +53,10 @@ const LoginPage = () => {
     <div className="login-container">
       <div className="login-card">
         <h1>Welcome to Consensus</h1>
-        <p className="login-description">
-          Sign in to save your conversations and customize your experience.
+        <p className="login-description deprecation-note">
+          This site is a deprecated prototype. For the latest version, please visit:
+          <br />
+          <a href="https://milesmoosavi.me/projects/funnel" className="redirect-link">milesmoosavi.me/projects/funnel</a>
         </p>
         
         {error && <div className="login-error">{error}</div>}

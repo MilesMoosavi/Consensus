@@ -1,11 +1,9 @@
 // config/passport.js
+console.log('[passport.js] This file is being executed directly or very early!');
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
-import dotenv from 'dotenv';
 import User from '../models/User.js';
-
-dotenv.config();
 
 // Serialize user to store in session
 passport.serializeUser((user, done) => {
@@ -23,6 +21,8 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // Google OAuth Strategy
+console.log('[passport.js] GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID); // Debug log
+console.log('[passport.js] GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET); // Debug log
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,

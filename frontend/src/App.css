@@ -532,8 +532,28 @@ button:disabled {
   justify-content: center;
   text-align: center;
   padding: 40px;
-  color: #666;
   color: var(--text-secondary);
+}
+
+.deprecation-note {
+  font-weight: 500;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+}
+
+.redirect-link {
+  color: #007AFF;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  display: inline-block;
+  margin-top: 0.5rem;
+  transition: opacity 0.2s;
+}
+
+.redirect-link:hover {
+  opacity: 0.8;
 }
 
 .empty-state-icon {

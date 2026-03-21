@@ -24,6 +24,25 @@
 .login-description {
   margin-bottom: 2rem;
   color: var(--secondary-text-color);
+  line-height: 1.5;
+}
+
+.deprecation-note {
+  font-weight: 500;
+}
+
+.redirect-link {
+  color: #007AFF;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  display: inline-block;
+  margin-top: 0.5rem;
+  transition: opacity 0.2s;
+}
+
+.redirect-link:hover {
+  opacity: 0.8;
 }
 
 .login-options {

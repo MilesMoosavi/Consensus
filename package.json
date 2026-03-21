@@ -4,8 +4,15 @@
   "description": "A prototype application that aggregates responses from multiple LLMs to form a consensus",
   "main": "backend/consensus.js",
   "scripts": {
-    "start": "node backend/consensus.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node backend/server.js",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:github": "node scripts/test-github.js",
+    "clean": "node scripts/cleanup.js"
   },
   "keywords": [
     "ai",
@@ -22,5 +29,8 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

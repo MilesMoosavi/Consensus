@@ -10,8 +10,13 @@ const ModelSelector = ({ activeModels, onModelToggle, availableProviders }) => {
   const [errorProviders, setErrorProviders] = useState({});
 
   useEffect(() => {
+    console.log('[ModelSelector] useEffect triggered. availableProviders:', JSON.parse(JSON.stringify(availableProviders))); // Log availableProviders
+
     const fetchModelsForProvider = async (provider) => {
-      if (provider.id === 'google' || provider.id === 'openai') { // Only fetch for these initially
+      console.log(`[ModelSelector] fetchModelsForProvider called for provider: ${provider.id}`, JSON.parse(JSON.stringify(provider)));
+      // MODIFIED: Include 'github' in the condition
+      if (provider.id === 'google' || provider.id === 'openai' || provider.id === 'github') {
+        console.log(`[ModelSelector] Condition met for dynamic fetch for provider: ${provider.id}`);
         setLoadingProviders(prev => ({ ...prev, [provider.id]: true }));
         setErrorProviders(prev => ({ ...prev, [provider.id]: null }));
         try {
@@ -33,6 +38,7 @@ const ModelSelector = ({ activeModels, onModelToggle, availableProviders }) => {
           setLoadingProviders(prev => ({ ...prev, [provider.id]: false }));
         }
       } else {
+        console.log(`[ModelSelector] Condition NOT met for dynamic fetch for provider: ${provider.id}. Using static data.`);
         // For providers not fetched dynamically, use static data directly
         // Ensure they also have providerId for consistency if needed elsewhere
         setDynamicProviderModels(prev => ({
@@ -43,8 +49,21 @@ const ModelSelector = ({ activeModels, onModelToggle, availableProviders }) => {
     };
 
     staticProviderModelData.forEach(provider => {
-      if (availableProviders.find(p => p.id === provider.id)?.available) {
+      console.log(`[ModelSelector] Checking static provider: ${provider.id}`);
+      const isProviderAvailable = availableProviders.find(p => p.id === provider.id);
+      console.log(`[ModelSelector] Is ${provider.id} in availableProviders prop?`, isProviderAvailable ? 'Yes' : 'No', isProviderAvailable);
+
+      if (isProviderAvailable?.available) {
+        console.log(`[ModelSelector] Calling fetchModelsForProvider for ${provider.id}`);
         fetchModelsForProvider(provider);
+      } else {
+        console.log(`[ModelSelector] NOT calling fetchModelsForProvider for ${provider.id} because it's not in availableProviders or not available.`);
+        // For providers not fetched dynamically, use static data directly
+        // Ensure they also have providerId for consistency if needed elsewhere
+        setDynamicProviderModels(prev => ({
+          ...prev,
+          [provider.id]: provider.models.map(m => ({...m, providerId: provider.id}))
+        }));
       }
     });
   }, [availableProviders]); // Rerun if availableProviders change

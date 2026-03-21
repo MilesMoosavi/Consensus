@@ -1,9 +1,13 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import axios from '../node_modules_old/axios';
+// import axios from '../node_modules_old/axios';
+// Corrected axios import if it's a direct dependency of the backend
+import axios from 'axios'; 
 import express from 'express';
 import cors from 'cors'; // Import the cors package
+import fetch from 'node-fetch'; // Import node-fetch
+import GitHubModelsService from './services/GitHubModelsService.js';
 
 // Replicate __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -14,6 +18,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 // Base Gemini API endpoint
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const OPENAI_API_BASE = 'https://api.openai.com/v1'; // Added OpenAI base URL
+const GITHUB_PAT = process.env.GITHUB_PAT; // Read GitHub PAT
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -129,9 +134,47 @@ async function queryOpenAI(prompt, model = 'gpt-4o') {
 }
 
 /**
+ * Query GitHub Models using the integrated service
+ * @param {string} prompt - The user's input prompt
+ * @param {string} model - The model to use (e.g. 'openai/gpt-4o')
+ * @returns {Promise<string>} - The model's response
+ */
+async function queryGitHubModel(prompt, model = 'openai/gpt-4o') {
+  if (!GITHUB_PAT) {
+    throw new Error('GitHub PAT not configured');
+  }
+
+  try {
+    const githubService = new GitHubModelsService(GITHUB_PAT);
+    return await githubService.queryModel(prompt, model);
+  } catch (error) {
+    console.error("GitHub Models Error:", error.message);
+    throw error;
+  }
+}
+/**
+ * Fetches available models from the GitHub Models API
+ * @returns {Promise<Array>} - A list of available GitHub models
+ */
+async function fetchGitHubModels() {
+  if (!GITHUB_PAT) {
+    console.warn('GitHub PAT not configured. Skipping GitHub models.');
+    return [];
+  }
+  
+  try {
+    // Use the integrated service to get available models
+    return GitHubModelsService.getAvailableModels();
+  } catch (error) {
+    console.error('Error fetching GitHub models:', error);
+    return [];
+  }
+}
+
+/**
  * Function to handle different providers
  * @param {string} prompt - The user's input prompt
- * @param {string} provider - The provider (google, openai, deepseek)
+ * @param {string} provider - The provider (google, openai, deepseek, github)
  * @param {string} model - The specific model to use
  * @returns {Promise<string>} - The model's response
  */
@@ -141,6 +184,8 @@ async function queryLLM(prompt, provider = 'google', model = 'gemini-1.5-pro-002
       return await queryGemini(prompt, model);
     case 'openai':
       return await queryOpenAI(prompt, model); // Updated to call queryOpenAI
+    case 'github':
+      return await queryGitHubModel(prompt, model);
     case 'deepseek':
       return "DeepSeek integration is coming soon!";
     default:
@@ -154,11 +199,9 @@ app.post('/api/prompt', async (req, res) => {
 
     if (!prompt) {
         return res.status(400).json({ message: 'Prompt is required' });
-    }
-
-    try {
-        // Only allow specific providers that are actually implemented
-        if (provider !== 'google' && provider !== 'openai') { // Updated to allow openai
+    }    try {
+        // Allow google, openai, and github providers
+        if (provider !== 'google' && provider !== 'openai' && provider !== 'github') {
           return res.status(400).json({ message: `Provider '${provider}' is not supported yet.` });
         }
 
@@ -191,6 +234,12 @@ app.get('/api/models/:provider', async (req, res) => {
         }
         break;
       case 'openai':
+        // Ensure OPENAI_API_KEY is available before making the call
+        if (!process.env.OPENAI_API_KEY) {
+          console.warn('OPENAI_API_KEY not configured. Skipping OpenAI models.');
+          models = []; // Return empty array or handle as an error
+          break;
+        }
         const openaiResponse = await axios.get('https://api.openai.com/v1/models', {
           headers: { 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` },
         });
@@ -202,6 +251,9 @@ app.get('/api/models/:provider', async (req, res) => {
             // Add other relevant properties if needed
           })).sort((a, b) => a.id.localeCompare(b.id)); // Optional: sort models by ID
         }
+        break;
+      case 'github': // Add case for GitHub
+        models = await fetchGitHubModels();
         break;
       default:
         return res.status(400).json({ message: `Provider '${provider}' is not supported for dynamic model fetching.` });

@@ -24,3 +24,29 @@ dist-ssr
 *.sw?
 
 *storybook.log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Development notes and temporary files
+TODO.md
+RECAP.md
+NOTES.md
+DEV_NOTES.md
+SCRATCH.md
+
+# Script outputs and temporary files
+scripts/output/
+temp/
+tmp/
+
+# OS generated files
+Thumbs.db
+*.tmp
+*.temp
+
+# IDE specific files
+*.code-workspace
+.history/

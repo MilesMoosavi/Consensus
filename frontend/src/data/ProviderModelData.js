@@ -68,6 +68,34 @@ export const providerModelData = [
       { id: "deepseek-coder", name: "DeepSeek Coder", available: false },
       { id: "deepseek-chat", name: "DeepSeek Chat", available: false },
     ],
+  },  {
+    id: "github",
+    name: "GitHub Models",
+    icon: "🐙", // Using an octopus emoji as a placeholder for GitHub logo
+    available: true, // Models will be fetched dynamically
+    models: [
+      // OpenAI Models
+      { id: "openai/gpt-4o", name: "GPT-4o", available: true },
+      { id: "openai/gpt-4o-mini", name: "GPT-4o Mini", available: true },
+      
+      // Meta Llama Models
+      { id: "meta-llama/Meta-Llama-3.1-405B-Instruct", name: "Llama 3.1 405B", available: true },
+      { id: "meta-llama/Meta-Llama-3.1-70B-Instruct", name: "Llama 3.1 70B", available: true },
+      { id: "meta-llama/Meta-Llama-3.1-8B-Instruct", name: "Llama 3.1 8B", available: true },
+      
+      // Mistral Models
+      { id: "mistralai/Mistral-large", name: "Mistral Large", available: true },
+      { id: "mistralai/Mistral-small", name: "Mistral Small", available: true },
+      
+      // Cohere Models
+      { id: "cohere/Cohere-command-r-plus", name: "Command R+", available: true },
+      { id: "cohere/Cohere-command-r", name: "Command R", available: true },
+      
+      // Microsoft Phi Models
+      { id: "microsoft/Phi-3-medium-128k-instruct", name: "Phi-3 Medium", available: true },
+      { id: "microsoft/Phi-3-small-128k-instruct", name: "Phi-3 Small", available: true }
+    ],
+    description: "Models available via the GitHub Models catalog.",
   },
 ];
 

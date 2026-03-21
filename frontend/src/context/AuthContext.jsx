@@ -39,11 +39,9 @@ export const AuthProvider = ({ children }) => {
             setIsGuestSession(false);
           }
         } else {
-          // No token. Any previous guest mode flag in localStorage is cleared on page load.
-          // User will be redirected to /login by ProtectedRoute and can choose to be a guest again.
-          StorageService.disableGuestMode(); // Clears GUEST_MODE_KEY and guest conversation
-          setIsAuthenticated(false);
-          setIsGuestSession(false);
+          // No token found. Default to guest session automatically.
+          // This allows users to test the prototype without logging in.
+          activateGuestSession();
         }
       } catch (err) {
         console.error('Auth check error:', err);
